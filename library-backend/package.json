@@ -1,0 +1,16 @@
+{
+  "name": "library-backend",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+      "start": "node index.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "dependencies": {
+    "@apollo/server": "^5.5.1",
+    "graphql": "^16.14.2"
+  }
+}
