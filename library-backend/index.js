@@ -95,7 +95,18 @@ const typeDefs = `
     allBooks(author: String, genre: String): [Book!]!
     allAuthors: [Author!]!
   }
+
+  type Mutation {
+    addBook(
+      title: String!
+      author: String!
+      published: Int!
+      genres: [String!]!
+    ): Book!
+  }
 `;
+
+const { v4: uuidv4 } = require("uuid");
 
 const resolvers = {
   Query: {
@@ -113,6 +124,18 @@ const resolvers = {
   },
   Author: {
     bookCount: (root) => books.filter((b) => b.author === root.name).length,
+  },
+  Mutation: {
+    addBook: (root, args) => {
+      const authorExists = authors.find((a) => a.name === args.author);
+      if (!authorExists) {
+        const newAuthor = { name: args.author, id: uuidv4() };
+        authors = authors.concat(newAuthor);
+      }
+      const newBook = { ...args, id: uuidv4() };
+      books = books.concat(newBook);
+      return newBook;
+    },
   },
 };
 
