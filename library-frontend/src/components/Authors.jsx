@@ -1,5 +1,6 @@
 import { useQuery, useMutation, gql } from '@apollo/client'
 import { useState } from 'react'
+import Select from 'react-select'
 
 const ALL_AUTHORS = gql`
   query {
@@ -28,7 +29,7 @@ const Authors = (props) => {
     refetchQueries: [{ query: ALL_AUTHORS }]
   })
 
-  const [name, setName] = useState('')
+  const [selectedAuthor, setSelectedAuthor] = useState(null)
   const [born, setBorn] = useState('')
 
   if (!props.show) return null
@@ -36,14 +37,24 @@ const Authors = (props) => {
 
   const authors = result.data.allAuthors
 
+  const authorOptions = authors.map((a) => ({
+    value: a.name,
+    label: a.name
+  }))
+
   const submit = async (event) => {
     event.preventDefault()
     const bornYear = parseInt(born)
+    if (!selectedAuthor) {
+      alert('Please select an author')
+      return
+    }
     if (isNaN(bornYear) || bornYear < 1000 || bornYear > new Date().getFullYear()) {
       alert('Please enter a valid birth year')
       return
     }
-    await editAuthor({ variables: { name, setBornTo: bornYear } })
+    await editAuthor({ variables: { name: selectedAuthor.value, setBornTo: bornYear } })
+    setSelectedAuthor(null)
     setBorn('')
   }
 
@@ -69,15 +80,12 @@ const Authors = (props) => {
 
       <h3>Set birthyear</h3>
       <form onSubmit={submit}>
-        <div>
-          name
-          <select value={name} onChange={({ target }) => setName(target.value)}>
-            <option value="">select author</option>
-            {authors.map((a) => (
-              <option key={a.id} value={a.name}>{a.name}</option>
-            ))}
-          </select>
-        </div>
+        <Select
+          value={selectedAuthor}
+          onChange={setSelectedAuthor}
+          options={authorOptions}
+          placeholder="select author..."
+        />
         <div>
           born
           <input
