@@ -10,11 +10,17 @@
   "license": "ISC",
   "description": "",
   "dependencies": {
-    "@apollo/server": "^5.5.1",
+    "@apollo/server": "^4.13.0",
+    "@graphql-tools/schema": "^10.0.38",
+    "cors": "^2.8.6",
     "dotenv": "^17.4.2",
+    "express": "^5.2.1",
     "graphql": "^16.14.2",
+    "graphql-subscriptions": "^3.0.0",
+    "graphql-ws": "^6.2.0",
     "jsonwebtoken": "^9.0.3",
     "mongoose": "^9.9.1",
-    "uuid": "^14.0.1"
+    "uuid": "^14.0.1",
+    "ws": "^8.21.1"
   }
 }
