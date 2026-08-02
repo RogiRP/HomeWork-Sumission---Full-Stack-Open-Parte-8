@@ -1,39 +1,52 @@
-import { useState } from 'react'
-import { useQuery, gql } from '@apollo/client'
+import { useState } from "react";
+import { useQuery, gql } from "@apollo/client";
 
 const ALL_BOOKS = gql`
-  query {
-    allBooks {
+  query allBooks($genre: String) {
+    allBooks(genre: $genre) {
       title
       author {
         name
       }
       published
-      genres
       id
     }
   }
-`
+`;
+
+const ALL_GENRES = gql`
+  query {
+    allBooks {
+      genres
+    }
+  }
+`;
 
 const Books = (props) => {
-  const result = useQuery(ALL_BOOKS)
-  const [selectedGenre, setSelectedGenre] = useState(null)
+  const [selectedGenre, setSelectedGenre] = useState(null);
 
-  if (!props.show) return null
-  if (result.loading) return <div>loading...</div>
+  const booksResult = useQuery(ALL_BOOKS, {
+    variables: { genre: selectedGenre },
+  });
 
-  const books = result.data.allBooks
+  const genresResult = useQuery(ALL_GENRES);
 
-  const genres = [...new Set(books.flatMap(b => b.genres))]
+  if (!props.show) return null;
+  if (booksResult.loading || genresResult.loading) return <div>loading...</div>;
 
-  const filteredBooks = selectedGenre
-    ? books.filter(b => b.genres.includes(selectedGenre))
-    : books
+  const books = booksResult.data.allBooks;
+  const genres = [
+    ...new Set(genresResult.data.allBooks.flatMap((b) => b.genres)),
+  ];
 
   return (
     <div>
       <h2>books</h2>
-      {selectedGenre && <p>in genre <strong>{selectedGenre}</strong></p>}
+      {selectedGenre && (
+        <p>
+          in genre <strong>{selectedGenre}</strong>
+        </p>
+      )}
       <table>
         <tbody>
           <tr>
@@ -41,7 +54,7 @@ const Books = (props) => {
             <th>author</th>
             <th>published</th>
           </tr>
-          {filteredBooks.map((b) => (
+          {books.map((b) => (
             <tr key={b.id}>
               <td>{b.title}</td>
               <td>{b.author.name}</td>
@@ -51,13 +64,15 @@ const Books = (props) => {
         </tbody>
       </table>
       <div>
-        {genres.map(genre => (
-          <button key={genre} onClick={() => setSelectedGenre(genre)}>{genre}</button>
+        {genres.map((genre) => (
+          <button key={genre} onClick={() => setSelectedGenre(genre)}>
+            {genre}
+          </button>
         ))}
         <button onClick={() => setSelectedGenre(null)}>all genres</button>
       </div>
     </div>
-  )
-}
+  );
+};
 
-export default Books
+export default Books;
