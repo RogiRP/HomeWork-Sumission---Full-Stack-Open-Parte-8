@@ -27,6 +27,7 @@ const Books = (props) => {
 
   const booksResult = useQuery(ALL_BOOKS, {
     variables: { genre: selectedGenre },
+    fetchPolicy: "network-only",
   });
 
   const genresResult = useQuery(ALL_GENRES);
