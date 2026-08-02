@@ -1,23 +1,25 @@
-import { useQuery, gql } from "@apollo/client";
+import { useQuery, gql } from '@apollo/client'
 
 const ALL_BOOKS = gql`
   query {
     allBooks {
       title
-      author
+      author {
+        name
+      }
       published
       id
     }
   }
-`;
+`
 
 const Books = (props) => {
-  const result = useQuery(ALL_BOOKS);
+  const result = useQuery(ALL_BOOKS)
 
-  if (!props.show) return null;
-  if (result.loading) return <div>loading...</div>;
+  if (!props.show) return null
+  if (result.loading) return <div>loading...</div>
 
-  const books = result.data.allBooks;
+  const books = result.data.allBooks
 
   return (
     <div>
@@ -32,14 +34,14 @@ const Books = (props) => {
           {books.map((b) => (
             <tr key={b.id}>
               <td>{b.title}</td>
-              <td>{b.author}</td>
+              <td>{b.author.name}</td>
               <td>{b.published}</td>
             </tr>
           ))}
         </tbody>
       </table>
     </div>
-  );
-};
+  )
+}
 
-export default Books;
+export default Books
