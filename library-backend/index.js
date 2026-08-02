@@ -1,4 +1,5 @@
 require("dotenv").config();
+const { GraphQLError } = require("graphql");
 const { ApolloServer } = require("@apollo/server");
 const { startStandaloneServer } = require("@apollo/server/standalone");
 const mongoose = require("mongoose");
@@ -61,20 +62,32 @@ const resolvers = {
   },
   Mutation: {
     addBook: async (root, args) => {
-      let author = await Author.findOne({ name: args.author });
-      if (!author) {
-        author = new Author({ name: args.author });
-        await author.save();
+      try {
+        let author = await Author.findOne({ name: args.author });
+        if (!author) {
+          author = new Author({ name: args.author });
+          await author.save();
+        }
+        const book = new Book({ ...args, author: author._id });
+        await book.save();
+        return Book.findById(book._id).populate("author");
+      } catch (error) {
+        throw new GraphQLError(error.message, {
+          extensions: { code: "BAD_USER_INPUT" },
+        });
       }
-      const book = new Book({ ...args, author: author._id });
-      await book.save();
-      return Book.findById(book._id).populate("author");
     },
     editAuthor: async (root, args) => {
-      const author = await Author.findOne({ name: args.name });
-      if (!author) return null;
-      author.born = args.setBornTo;
-      return author.save();
+      try {
+        const author = await Author.findOne({ name: args.name });
+        if (!author) return null;
+        author.born = args.setBornTo;
+        return author.save();
+      } catch (error) {
+        throw new GraphQLError(error.message, {
+          extensions: { code: "BAD_USER_INPUT" },
+        });
+      }
     },
   },
 };
