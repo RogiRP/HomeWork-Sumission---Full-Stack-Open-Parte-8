@@ -14,6 +14,7 @@ const mongoose = require("mongoose");
 const jwt = require("jsonwebtoken");
 const { GraphQLError } = require("graphql");
 const { PubSub } = require("graphql-subscriptions");
+const DataLoader = require("dataloader");
 const Author = require("./models/author");
 const Book = require("./models/book");
 const User = require("./models/user");
@@ -96,7 +97,8 @@ const resolvers = {
     me: (root, args, context) => context.currentUser,
   },
   Author: {
-    bookCount: async (root) => Book.countDocuments({ author: root._id }),
+    bookCount: (root, args, context) =>
+      context.loaders.bookCount.load(root._id),
   },
   Mutation: {
     addBook: async (root, args, context) => {
@@ -178,7 +180,7 @@ const start = async () => {
 
   const wsServer = new WebSocketServer({
     server: httpServer,
-    path: "/",
+    path: "/graphql",
   });
 
   const serverCleanup = useServer({ schema }, wsServer);
@@ -201,21 +203,37 @@ const start = async () => {
 
   await server.start();
 
+  app.use(cors());
+  app.use(express.json());
   app.use(
     "/",
-    cors(),
-    express.json(),
     expressMiddleware(server, {
       context: async ({ req }) => {
         const auth = req ? req.headers.authorization : null;
+        let currentUser = null;
         if (auth && auth.startsWith("Bearer ")) {
           const decodedToken = jwt.verify(
             auth.substring(7),
             process.env.JWT_SECRET,
           );
-          const currentUser = await User.findById(decodedToken.id);
-          return { currentUser };
+          currentUser = await User.findById(decodedToken.id);
         }
+        return {
+          currentUser,
+          loaders: {
+            bookCount: new DataLoader(async (authorIds) => {
+              const books = await Book.find({ author: { $in: authorIds } });
+              console.log(
+                `DataLoader: fetched books for ${authorIds.length} authors in 1 query`,
+              );
+              return authorIds.map(
+                (id) =>
+                  books.filter((b) => b.author.toString() === id.toString())
+                    .length,
+              );
+            }),
+          },
+        };
       },
     }),
   );

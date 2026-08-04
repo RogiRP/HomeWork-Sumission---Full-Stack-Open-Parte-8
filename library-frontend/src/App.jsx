@@ -8,6 +8,7 @@ import Recommended from './components/Recommended'
 import { BOOK_ADDED } from './subscriptions'
 import { gql } from '@apollo/client'
 
+
 const ALL_BOOKS = gql`
   query allBooks($genre: String) {
     allBooks(genre: $genre) {
